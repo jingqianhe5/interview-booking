@@ -1,6 +1,7 @@
 const http = require('http');
 const crypto = require('crypto');
 const tcb = require('@cloudbase/node-sdk');
+const STUDENTS = require('./students-seed.json');
 
 const ENV_ID = 'interview-booking-d6d8ru0aa2e0c1';
 const PORT = 9000;
@@ -27,6 +28,12 @@ const SCHEDULE = {
     step: 10,
     windows: [['14:30', '17:00'], ['19:30', '21:30']],
   },
+};
+
+const STUDENT_SET = new Set(STUDENTS.map((s) => `${s.grade}|${s.name}`));
+const STUDENTS_BY_GRADE = {
+  '大一': STUDENTS.filter((s) => s.grade === '大一').map((s) => s.name),
+  '大二': STUDENTS.filter((s) => s.grade === '大二').map((s) => s.name),
 };
 
 function send(res, statusCode, data) {
@@ -93,13 +100,11 @@ async function readJson(req) {
 }
 
 async function getStudents(grade) {
-  const result = await db.collection('students')
-    .where({ grade, active: true })
-    .limit(500)
-    .get();
-
-  return (result.data || [])
-    .map((x) => ({ name: x.name, booked: Boolean(x.bookingId) }))
+  const names = STUDENTS_BY_GRADE[grade] || [];
+  const result = await db.collection('bookings').where({ grade }).limit(500).get();
+  const booked = new Set((result.data || []).map((x) => x.name));
+  return names
+    .map((name) => ({ name, booked: booked.has(name) }))
     .sort((a, b) => a.name.localeCompare(b.name, 'zh-CN'));
 }
 
@@ -127,7 +132,7 @@ async function getSlots(grade, date) {
 
 async function createBooking({ grade, name, date, time }) {
   name = normalizeName(name);
-  if (!SCHEDULE[grade] || !name || !isValidBooking(grade, date, time)) {
+  if (!SCHEDULE[grade] || !name || !STUDENT_SET.has(`${grade}|${name}`) || !isValidBooking(grade, date, time)) {
     const e = new Error('INVALID_BOOKING');
     e.code = 'INVALID_BOOKING';
     throw e;
@@ -139,23 +144,22 @@ async function createBooking({ grade, name, date, time }) {
   const now = new Date();
   const booking = { grade, name, date, time };
 
+  const studentRef = db.collection('students').doc(studentId);
+  try {
+    const current = first(await studentRef.get());
+    if (!current) await studentRef.set({ name, grade, active: true, createdAt: now, updatedAt: now });
+  } catch (_) {
+    await studentRef.set({ name, grade, active: true, createdAt: now, updatedAt: now });
+  }
+
   await db.runTransaction(async (tx) => {
-    const studentRef = tx.collection('students').doc(studentId);
+    const txStudentRef = tx.collection('students').doc(studentId);
     const slotRef = tx.collection('slots').doc(slotId);
     const bookingRef = tx.collection('bookings').doc(bookingId);
 
     let student = null;
-    try {
-      student = first(await studentRef.get());
-    } catch (_) {}
-
-    if (!student || !student.active || student.grade !== grade || student.name !== name) {
-      const e = new Error('STUDENT_NOT_FOUND');
-      e.code = 'STUDENT_NOT_FOUND';
-      throw e;
-    }
-
-    if (student.bookingId) {
+    try { student = first(await txStudentRef.get()); } catch (_) {}
+    if (student?.bookingId) {
       const e = new Error('ALREADY_BOOKED');
       e.code = 'ALREADY_BOOKED';
       e.booking = student.booking || null;
@@ -163,10 +167,7 @@ async function createBooking({ grade, name, date, time }) {
     }
 
     let slot = null;
-    try {
-      slot = first(await slotRef.get());
-    } catch (_) {}
-
+    try { slot = first(await slotRef.get()); } catch (_) {}
     const count = Number((slot && slot.count) || 0);
     if (count >= CAPACITY) {
       const e = new Error('SLOT_FULL');
@@ -174,26 +175,9 @@ async function createBooking({ grade, name, date, time }) {
       throw e;
     }
 
-    await slotRef.set({
-      grade,
-      date,
-      time,
-      count: count + 1,
-      capacity: CAPACITY,
-      updatedAt: now,
-    });
-
-    await bookingRef.set({
-      ...booking,
-      studentId,
-      createdAt: now,
-    });
-
-    await studentRef.update({
-      bookingId,
-      booking,
-      bookedAt: now,
-    });
+    await slotRef.set({ grade, date, time, count: count + 1, capacity: CAPACITY, updatedAt: now });
+    await bookingRef.set({ ...booking, studentId, createdAt: now });
+    await txStudentRef.update({ bookingId, booking, bookedAt: now });
   });
 
   return { bookingId, booking };
@@ -273,14 +257,11 @@ async function listBookings() {
 }
 
 async function listUnbooked() {
-  const result = await db.collection('students')
-    .where({ active: true })
-    .limit(500)
-    .get();
-
-  return (result.data || [])
-    .filter((x) => !x.bookingId)
-    .map((x) => ({ grade: x.grade, name: x.name }))
+  const bookings = await listBookings();
+  const booked = new Set(bookings.map((x) => `${x.grade}|${x.name}`));
+  return STUDENTS
+    .filter((s) => !booked.has(`${s.grade}|${s.name}`))
+    .map((s) => ({ grade: s.grade, name: s.name }))
     .sort((a, b) => `${a.grade}${a.name}`.localeCompare(`${b.grade}${b.name}`, 'zh-CN'));
 }
 
@@ -292,7 +273,7 @@ async function handle(req, res) {
 
   try {
     if (req.method === 'GET' && action === 'health') {
-      return send(res, 200, { ok: true, capacity: CAPACITY, envId: ENV_ID });
+      return send(res, 200, { ok: true, capacity: CAPACITY, envId: ENV_ID, roster: { total: STUDENTS.length, freshman: STUDENTS_BY_GRADE['大一'].length, sophomore: STUDENTS_BY_GRADE['大二'].length } });
     }
 
     if (req.method === 'GET' && action === 'schedule') {
