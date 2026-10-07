@@ -1,0 +1,37 @@
+{
+  "$schema": "https://static.cloudbase.net/cli/cloudbaserc.schema.json",
+  "envId": "interview-booking-d6d8ru0aa2e0c1",
+  "functionRoot": "./functions",
+  "functions": [
+    {
+      "name": "interview-api",
+      "runtime": "Nodejs20.19",
+      "handler": "index.main",
+      "installDependency": true,
+      "timeout": 10,
+      "memorySize": 256
+    }
+  ],
+  "hosting": [
+    {
+      "name": "interview-web",
+      "root": "./public",
+      "framework": "static",
+      "outputDir": ".",
+      "deployPath": "/"
+    }
+  ],
+  "gateway": {
+    "routes": [
+      {
+        "path": "/api/interview",
+        "target": "function:interview-api",
+        "enableAuth": false
+      },
+      {
+        "path": "/",
+        "target": "hosting:interview-web"
+      }
+    ]
+  }
+}
