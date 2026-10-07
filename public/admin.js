@@ -35,7 +35,7 @@ async function refresh() {
     document.querySelector('#bookedCount').textContent = booked.count;
     document.querySelector('#unbookedCount').textContent = unbooked.count;
     const tbody = document.querySelector('#bookingRows');
-    tbody.innerHTML = cachedBookings.length ? cachedBookings.map((b) => `<tr><td>${esc(b.grade)}</td><td>${esc(b.name)}</td><td>${esc(b.date)}</td><td>${esc(b.time)}</td></tr>`).join('') : '<tr><td colspan="4" class="empty">暂无预约</td></tr>';
+    tbody.innerHTML = cachedBookings.length ? cachedBookings.map((b) => `<tr><td>${esc(b.grade)}</td><td>${esc(b.name)}</td><td>${esc(b.date)}</td><td>${esc(b.time)}</td><td><button class="danger-btn delete-booking" type="button" data-id="${esc(b.id)}" data-name="${esc(b.name)}" data-date="${esc(b.date)}" data-time="${esc(b.time)}">删除预约</button></td></tr>`).join('') : '<tr><td colspan="5" class="empty">暂无预约</td></tr>';
     const list = document.querySelector('#unbookedList');
     list.innerHTML = unbooked.students.length ? unbooked.students.map((s) => `<span class="pill">${esc(s.grade)} · ${esc(s.name)}</span>`).join('') : '<span class="muted">全部人员均已预约</span>';
   } catch (e) {
@@ -44,6 +44,32 @@ async function refresh() {
 }
 
 document.querySelector('#refreshBtn').addEventListener('click', refresh);
+
+document.querySelector('#bookingRows').addEventListener('click', async (e) => {
+  const btn = e.target.closest('.delete-booking');
+  if (!btn) return;
+
+  const name = btn.dataset.name;
+  const date = btn.dataset.date;
+  const time = btn.dataset.time;
+  const ok = confirm(`确定删除 ${name} 的预约吗？\n${date} ${time}\n\n删除后该时间段会自动释放 1 个名额，该同学也可以重新预约。`);
+  if (!ok) return;
+
+  btn.disabled = true;
+  btn.textContent = '删除中…';
+  try {
+    await request(API, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ action: 'admin-delete-booking', bookingId: btn.dataset.id }),
+    });
+    await refresh();
+  } catch (e) {
+    alert(e.message);
+    btn.disabled = false;
+    btn.textContent = '删除预约';
+  }
+});
 
 document.querySelector('#exportBtn').addEventListener('click', () => {
   if (!cachedBookings.length) return alert('当前没有可导出的预约数据');
