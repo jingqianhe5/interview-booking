@@ -256,6 +256,59 @@ async function listBookings() {
     );
 }
 
+async function deleteBooking(bookingId) {
+  if (!bookingId) {
+    const e = new Error('INVALID_BOOKING_ID');
+    e.code = 'INVALID_BOOKING_ID';
+    throw e;
+  }
+
+  await db.runTransaction(async (tx) => {
+    const bookingRef = tx.collection('bookings').doc(bookingId);
+    let booking = null;
+    try { booking = first(await bookingRef.get()); } catch (_) {}
+
+    if (!booking) {
+      const e = new Error('BOOKING_NOT_FOUND');
+      e.code = 'BOOKING_NOT_FOUND';
+      throw e;
+    }
+
+    const studentId = booking.studentId || makeId('stu', booking.grade, booking.name);
+    const slotId = makeId('slot', booking.grade, booking.date, booking.time);
+    const studentRef = tx.collection('students').doc(studentId);
+    const slotRef = tx.collection('slots').doc(slotId);
+
+    let slot = null;
+    try { slot = first(await slotRef.get()); } catch (_) {}
+    const nextCount = Math.max(0, Number((slot && slot.count) || 0) - 1);
+
+    await slotRef.set({
+      grade: booking.grade,
+      date: booking.date,
+      time: booking.time,
+      count: nextCount,
+      capacity: CAPACITY,
+      updatedAt: new Date(),
+    });
+
+    let student = null;
+    try { student = first(await studentRef.get()); } catch (_) {}
+    if (student) {
+      await studentRef.update({
+        bookingId: null,
+        booking: null,
+        bookedAt: null,
+        updatedAt: new Date(),
+      });
+    }
+
+    await bookingRef.remove();
+  });
+
+  return { deleted: true, bookingId };
+}
+
 async function listUnbooked() {
   const bookings = await listBookings();
   const booked = new Set(bookings.map((x) => `${x.grade}|${x.name}`));
@@ -315,6 +368,10 @@ async function handle(req, res) {
 
       if (req.method === 'POST' && resolvedAction === 'admin-import') {
         return send(res, 200, { ok: true, ...(await importStudents(body.students)) });
+      }
+
+      if (req.method === 'POST' && resolvedAction === 'admin-delete-booking') {
+        return send(res, 200, { ok: true, ...(await deleteBooking(body.bookingId)) });
       }
 
       if (req.method === 'GET' && resolvedAction === 'admin-bookings') {
