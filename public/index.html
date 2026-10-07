@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#111827" />
+  <title>招新面试时间预约</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <main class="shell">
+    <section class="hero">
+      <p class="eyebrow">RECRUITMENT INTERVIEW</p>
+      <h1>招新面试时间预约</h1>
+      <p class="hero-copy">请选择你的年级、姓名、日期和面试时间。每个时间段最多 2 人，满员后会自动关闭。</p>
+    </section>
+
+    <section class="card form-card">
+      <div class="step-block">
+        <div class="step-title"><span>01</span><div><strong>选择年级</strong><small>不同年级的面试日期和时长不同</small></div></div>
+        <div id="gradeChoices" class="segmented">
+          <button type="button" data-grade="大一">大一</button>
+          <button type="button" data-grade="大二">大二</button>
+        </div>
+      </div>
+
+      <div class="step-block" id="nameBlock" hidden>
+        <div class="step-title"><span>02</span><div><strong>选择姓名</strong><small>请务必选择本人姓名</small></div></div>
+        <label class="field">
+          <span>姓名</span>
+          <select id="nameSelect">
+            <option value="">请选择</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="step-block" id="dateBlock" hidden>
+        <div class="step-title"><span>03</span><div><strong>选择日期</strong><small id="dateHint"></small></div></div>
+        <div id="dateChoices" class="date-grid"></div>
+      </div>
+
+      <div class="step-block" id="slotBlock" hidden>
+        <div class="step-title"><span>04</span><div><strong>选择时间</strong><small>灰色时间段表示已满</small></div></div>
+        <div id="slotChoices" class="slot-grid"></div>
+      </div>
+
+      <div class="summary" id="summary" hidden>
+        <div><span>年级</span><strong id="sumGrade">-</strong></div>
+        <div><span>姓名</span><strong id="sumName">-</strong></div>
+        <div><span>日期</span><strong id="sumDate">-</strong></div>
+        <div><span>时间</span><strong id="sumTime">-</strong></div>
+      </div>
+
+      <button id="submitBtn" class="primary" type="button" disabled>确认预约</button>
+      <p class="fineprint">提交后不可自行修改。如需调整，请联系招新负责人。</p>
+      <div id="notice" class="notice" hidden></div>
+    </section>
+  </main>
+
+  <script src="./config.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>
