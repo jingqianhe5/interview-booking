@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>面试预约管理后台</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <main class="shell admin-shell">
+    <section class="hero compact">
+      <p class="eyebrow">ADMIN CONSOLE</p>
+      <h1>面试预约管理后台</h1>
+      <p class="hero-copy">导入报名名单、查看预约结果、查看未预约人员并导出 CSV。</p>
+    </section>
+
+    <section class="card admin-auth">
+      <label class="field">
+        <span>管理员密钥</span>
+        <input id="adminKey" type="password" placeholder="请输入部署时设置的 ADMIN_KEY" autocomplete="current-password" />
+      </label>
+      <button id="saveKey" class="secondary" type="button">保存密钥</button>
+      <span id="keyStatus" class="muted"></span>
+    </section>
+
+    <section class="admin-grid">
+      <section class="card">
+        <h2>导入报名名单</h2>
+        <p class="muted">从飞书导出 CSV，文件中需要包含「姓名」和「年级」两列。支持“大一/大二”。</p>
+        <input id="csvFile" type="file" accept=".csv,text/csv" />
+        <div class="button-row">
+          <button id="importBtn" class="primary small" type="button">导入名单</button>
+        </div>
+        <div id="importResult" class="notice" hidden></div>
+      </section>
+
+      <section class="card stat-card">
+        <h2>当前进度</h2>
+        <div class="stats">
+          <div><span>已预约</span><strong id="bookedCount">-</strong></div>
+          <div><span>未预约</span><strong id="unbookedCount">-</strong></div>
+        </div>
+        <div class="button-row">
+          <button id="refreshBtn" class="secondary" type="button">刷新数据</button>
+          <button id="exportBtn" class="secondary" type="button">导出预约 CSV</button>
+        </div>
+      </section>
+    </section>
+
+    <section class="card table-card">
+      <div class="table-head">
+        <h2>预约结果</h2>
+        <span class="muted">按日期和时间自动排序</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>年级</th><th>姓名</th><th>日期</th><th>时间</th></tr></thead>
+          <tbody id="bookingRows"><tr><td colspan="4" class="empty">尚未加载</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card table-card">
+      <div class="table-head"><h2>未预约人员</h2></div>
+      <div id="unbookedList" class="pill-list"><span class="muted">尚未加载</span></div>
+    </section>
+  </main>
+
+  <script src="./config.js"></script>
+  <script src="./admin.js"></script>
+</body>
+</html>
