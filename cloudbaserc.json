@@ -1,10 +1,12 @@
 {
   "$schema": "https://static.cloudbase.net/cli/cloudbaserc.schema.json",
+  "version": "2.1",
   "envId": "interview-booking-d6d8ru0aa2e0c1",
   "functionRoot": "./functions",
   "functions": [
     {
       "name": "interview-api",
+      "type": "Event",
       "runtime": "Nodejs20.19",
       "handler": "index.main",
       "installDependency": true,
@@ -25,8 +27,7 @@
     "routes": [
       {
         "path": "/api/interview",
-        "target": "function:interview-api",
-        "enableAuth": false
+        "target": "function:interview-api"
       },
       {
         "path": "/",
