@@ -25,12 +25,14 @@
       </div>
 
       <div class="step-block" id="nameBlock" hidden>
-        <div class="step-title"><span>02</span><div><strong>选择姓名</strong><small>请务必选择本人姓名</small></div></div>
+        <div class="step-title"><span>02</span><div><strong>搜索并选择姓名</strong><small>输入姓名中的任意文字即可筛选，请务必选择本人</small></div></div>
         <label class="field">
           <span>姓名</span>
-          <select id="nameSelect">
-            <option value="">请选择</option>
-          </select>
+          <div class="name-picker" id="namePicker">
+            <input id="nameSearch" type="search" placeholder="输入姓名搜索，例如：陈" autocomplete="off" />
+            <div id="nameOptions" class="name-options" hidden></div>
+          </div>
+          <small id="nameHelp" class="field-help"></small>
         </label>
       </div>
 
