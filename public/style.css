@@ -154,3 +154,15 @@ input[type="file"] { width: 100%; padding: 12px; border: 1px dashed #cbd5e1; bor
 }
 .name-empty { padding: 14px 12px; color: var(--muted); text-align: center; font-size: 13px; }
 .field-help { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; }
+
+.danger-btn {
+  border: 0;
+  border-radius: 10px;
+  padding: 8px 11px;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.danger-btn:hover:not(:disabled) { background: #fee2e2; }
+.danger-btn:disabled { opacity: .55; cursor: not-allowed; }
