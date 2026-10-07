@@ -1,0 +1,6 @@
+CloudBase CLI 官方方式（需先在你自己的电脑/终端完成腾讯云登录授权）：
+
+npm i -g @cloudbase/cli
+tcb login
+
+之后选择你的 CloudBase 环境并部署云函数/静态托管。当前项目已按 CloudBase 普通云函数 + HTTP 网关 + 静态托管结构准备好。
