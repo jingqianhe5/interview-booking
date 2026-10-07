@@ -104,3 +104,53 @@ input[type="file"] { width: 100%; padding: 12px; border: 1px dashed #cbd5e1; bor
 .success-screen p { color: var(--muted); }
 .success-booking { display: inline-flex; flex-direction: column; gap: 4px; margin: 18px auto; padding: 16px 22px; border: 1px solid var(--line); background: #f9fafb; border-radius: 16px; }
 .success-booking span { color: var(--muted); font-size: 13px; }
+
+/* searchable name picker */
+.name-picker { position: relative; }
+.name-picker input[type="search"] {
+  width: 100%;
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 14px;
+  padding: 14px 15px;
+  outline: none;
+  -webkit-appearance: none;
+}
+.name-picker input[type="search"]:focus {
+  border-color: #818cf8;
+  box-shadow: 0 0 0 4px rgba(99,102,241,.1);
+}
+.name-options {
+  position: absolute;
+  z-index: 20;
+  left: 0;
+  right: 0;
+  top: calc(100% + 8px);
+  max-height: 320px;
+  overflow: auto;
+  padding: 7px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: 0 18px 40px rgba(17,24,39,.14);
+}
+.name-option {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  border-radius: 10px;
+  padding: 11px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-align: left;
+  color: var(--ink);
+}
+.name-option:hover:not(:disabled) { background: #f3f4f6; }
+.name-option small { color: var(--muted); }
+.name-option.booked {
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+.name-empty { padding: 14px 12px; color: var(--muted); text-align: center; font-size: 13px; }
+.field-help { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; }
