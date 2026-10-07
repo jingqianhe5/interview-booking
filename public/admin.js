@@ -1,7 +1,6 @@
 const API = window.INTERVIEW_API_BASE || '/api/interview';
 const keyInput = document.querySelector('#adminKey');
 const keyStatus = document.querySelector('#keyStatus');
-const importResult = document.querySelector('#importResult');
 let cachedBookings = [];
 
 keyInput.value = localStorage.getItem('interview_admin_key') || '';
@@ -23,65 +22,15 @@ async function request(url, opts = {}) {
   return data;
 }
 
-function showBox(el, text, type = '') {
-  el.textContent = text;
-  el.className = `notice ${type}`.trim();
-  el.hidden = false;
-}
-
-function parseCSV(text) {
-  const lines = text.replace(/^\uFEFF/, '').split(/\r?\n/).filter((x) => x.trim());
-  if (lines.length < 2) return [];
-  const split = (line) => {
-    const out = []; let cur = ''; let quoted = false;
-    for (let i = 0; i < line.length; i++) {
-      const ch = line[i];
-      if (ch === '"') {
-        if (quoted && line[i + 1] === '"') { cur += '"'; i++; } else quoted = !quoted;
-      } else if (ch === ',' && !quoted) { out.push(cur.trim()); cur = ''; }
-      else cur += ch;
-    }
-    out.push(cur.trim());
-    return out;
-  };
-  const headers = split(lines[0]);
-  const nameIndex = headers.findIndex((x) => /姓名|名字|name/i.test(x));
-  const gradeIndex = headers.findIndex((x) => /年级|grade/i.test(x));
-  if (nameIndex < 0 || gradeIndex < 0) throw new Error('CSV 中没有找到「姓名」和「年级」两列');
-  return lines.slice(1).map(split).map((row) => ({ name: row[nameIndex] || '', grade: normalizeGrade(row[gradeIndex] || '') })).filter((x) => x.name && x.grade);
-}
-
-function normalizeGrade(v) {
-  const s = String(v).trim();
-  if (/大一|一年级|2026/.test(s)) return '大一';
-  if (/大二|二年级|2025/.test(s)) return '大二';
-  return s === '大一' || s === '大二' ? s : '';
-}
-
-document.querySelector('#importBtn').addEventListener('click', async () => {
-  const file = document.querySelector('#csvFile').files[0];
-  if (!file) return showBox(importResult, '请先选择 CSV 文件。', 'error');
-  try {
-    const students = parseCSV(await file.text());
-    if (!students.length) throw new Error('没有解析到有效的学生记录');
-    const data = await request(API, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ action: 'admin-import', students }),
-    });
-    showBox(importResult, `导入完成，共 ${data.imported} 人。`, 'success');
-    await refresh();
-  } catch (e) {
-    showBox(importResult, e.message, 'error');
-  }
-});
-
 async function refresh() {
   try {
-    const [booked, unbooked] = await Promise.all([
+    const [health, booked, unbooked] = await Promise.all([
+      request(`${API}?action=health`),
       request(`${API}?action=admin-bookings`),
       request(`${API}?action=admin-unbooked`),
     ]);
+    document.querySelector('#rosterCount').textContent = health.roster?.total ?? '-';
+    document.querySelector('#gradeCounts').textContent = health.roster ? `${health.roster.freshman} / ${health.roster.sophomore}` : '-';
     cachedBookings = booked.bookings || [];
     document.querySelector('#bookedCount').textContent = booked.count;
     document.querySelector('#unbookedCount').textContent = unbooked.count;
