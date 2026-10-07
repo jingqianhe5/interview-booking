@@ -11,7 +11,7 @@
     <section class="hero compact">
       <p class="eyebrow">ADMIN CONSOLE</p>
       <h1>面试预约管理后台</h1>
-      <p class="hero-copy">导入报名名单、查看预约结果、查看未预约人员并导出 CSV。</p>
+      <p class="hero-copy">报名名单已内置到系统；这里用于查看预约进度、未预约人员并导出 CSV。</p>
     </section>
 
     <section class="card admin-auth">
@@ -24,14 +24,13 @@
     </section>
 
     <section class="admin-grid">
-      <section class="card">
-        <h2>导入报名名单</h2>
-        <p class="muted">从飞书导出 CSV，文件中需要包含「姓名」和「年级」两列。支持“大一/大二”。</p>
-        <input id="csvFile" type="file" accept=".csv,text/csv" />
-        <div class="button-row">
-          <button id="importBtn" class="primary small" type="button">导入名单</button>
+      <section class="card stat-card">
+        <h2>报名名单</h2>
+        <div class="stats">
+          <div><span>名单总数</span><strong id="rosterCount">-</strong></div>
+          <div><span>大一 / 大二</span><strong id="gradeCounts">-</strong></div>
         </div>
-        <div id="importResult" class="notice" hidden></div>
+        <p class="muted">名单来自报名表，重复姓名记录已按“姓名 + 年级”去重。</p>
       </section>
 
       <section class="card stat-card">
